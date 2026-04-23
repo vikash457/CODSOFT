@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #f0f0f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .calc {
+      background: #ffffff;
+      border-radius: 24px;
+      overflow: hidden;
+      width: 320px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+
+    /* ── Display ── */
+    .display {
+      background: #1a1a2e;
+      padding: 1.5rem 1.25rem 1rem;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+    }
+
+    .display .expr {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: #6e6e9a;
+      min-height: 18px;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .display .val {
+      font-family: 'Space Mono', monospace;
+      font-size: 38px;
+      font-weight: 700;
+      color: #e8e8ff;
+      letter-spacing: -0.02em;
+      word-break: break-all;
+      transition: color 0.2s;
+    }
+
+    .display .val.error {
+      color: #E24B4A;
+    }
+
+    /* ── Button Grid ── */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr); /* CSS Grid: 4 equal columns */
+      gap: 1px;
+      background: #e0e0e8;
+    }
+
+    /* ── Base Button ── */
+    .btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      color: #1a1a2e;
+      transition: background 0.1s, transform 0.08s;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: #f5f5fa;
+    }
+
+    .btn:active {
+      transform: scale(0.92);
+      background: #ebebf5;
+    }
+
+    /* ── Operator Buttons ── */
+    .btn.op {
+      color: #534AB7;
+      font-size: 22px;
+      font-weight: 700;
+      background: #f5f4fe;
+    }
+
+    .btn.op:hover {
+      background: #eeedfe;
+    }
+
+    .btn.op.active-op {
+      background: #534AB7;
+      color: #ffffff;
+    }
+
+    /* ── Function Buttons (AC, +/-, %) ── */
+    .btn.fn {
+      color: #0F6E56;
+      font-size: 15px;
+      font-weight: 500;
+      background: #f0faf6;
+    }
+
+    .btn.fn:hover {
+      background: #e1f5ee;
+    }
+
+    /* ── Equals Button ── */
+    .btn.eq {
+      background: #534AB7;
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .btn.eq:hover {
+      background: #3C3489;
+    }
+
+    .btn.eq:active {
+      transform: scale(0.92);
+      background: #26215C;
+    }
+
+    /* ── Zero button spans 2 columns ── */
+    .btn.zero {
+      grid-column: span 2;
+      justify-content: flex-start;
+      padding-left: 28px;
+    }
+
+    /* ── Keyboard hint ── */
+    .hint {
+      text-align: center;
+      font-size: 11px;
+      color: #aaa;
+      padding: 10px 0 8px;
+      background: #fff;
+      letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="calc">
+
+    <!-- Display Screen -->
+    <div class="display">
+      <div class="expr" id="expr"></div>
+      <div class="val" id="disp">0</div>
+    </div>
+
+    <!-- Button Grid (CSS Grid Layout) -->
+    <div class="btn-grid">
+
+      <!-- Row 1: Functions + Divide -->
+      <button class="btn fn" data-action="clear">AC</button>
+      <button class="btn fn" data-action="sign">+/−</button>
+      <button class="btn fn" data-action="pct">%</button>
+      <button class="btn op" data-op="/">÷</button>
+
+      <!-- Row 2: 7 8 9 × -->
+      <button class="btn" data-num="7">7</button>
+      <button class="btn" data-num="8">8</button>
+      <button class="btn" data-num="9">9</button>
+      <button class="btn op" data-op="*">×</button>
+
+      <!-- Row 3: 4 5 6 − -->
+      <button class="btn" data-num="4">4</button>
+      <button class="btn" data-num="5">5</button>
+      <button class="btn" data-num="6">6</button>
+      <button class="btn op" data-op="-">−</button>
+
+      <!-- Row 4: 1 2 3 + -->
+      <button class="btn" data-num="1">1</button>
+      <button class="btn" data-num="2">2</button>
+      <button class="btn" data-num="3">3</button>
+      <button class="btn op" data-op="+">+</button>
+
+      <!-- Row 5: 0 (wide) . = -->
+      <button class="btn zero" data-num="0">0</button>
+      <button class="btn" data-num=".">.</button>
+      <button class="btn eq" data-action="eq">=</button>
+
+    </div>
+
+    <div class="hint">keyboard supported &nbsp;|&nbsp; esc = clear &nbsp;|&nbsp; backspace = delete</div>
+  </div>
+
+  <script>
+    // ── DOM References ──
+    const disp = document.getElementById('disp');
+    const expr = document.getElementById('expr');
+
+    // ── State Variables ──
+    let current    = '0';   // number currently being typed
+    let prev       = '';    // first operand (stored after pressing an operator)
+    let op         = null;  // pending operator: '+' | '-' | '*' | '/'
+    let justEvaled = false; // true right after pressing '='
+
+    // ── Format number for display ──
+    // Prevents floating-point noise like 0.30000000000000004
+    function fmt(n) {
+      if (isNaN(n) || !isFinite(n)) return 'Error';
+      let s = parseFloat(n.toPrecision(10)).toString();
+      return s.length > 12 ? parseFloat(n.toExponential(4)).toString() : s;
+    }
+
+    // ── Update the display ──
+    function update(val, isErr) {
+      disp.textContent = val;
+      disp.className   = 'val' + (isErr ? ' error' : '');
+    }
+
+    // ── Highlight the active operator button ──
+    function highlightOp(activeOp) {
+      document.querySelectorAll('.btn.op').forEach(btn => {
+        btn.classList.toggle('active-op', btn.dataset.op === activeOp);
+      });
+    }
+
+    // ── Handle digit / decimal input ──
+    function handleNum(n) {
+      if (justEvaled) { current = ''; justEvaled = false; }
+      if (n === '.' && current.includes('.')) return; // no double dot
+      if (current === '0' && n !== '.') current = n;
+      else current = current + n;
+      update(current);
+    }
+
+    // ── Handle operator press ──
+    function handleOp(o) {
+      justEvaled = false;
+
+      // if an operator is already pending, evaluate it first (chaining)
+      if (op && prev !== '') {
+        const result = calculate(parseFloat(prev), parseFloat(current), op);
+        if (result === null) { showError(); return; }
+        prev    = fmt(result);
+        current = '';
+        update(prev);
+      } else {
+        prev    = current === '' ? (prev || '0') : current;
+        current = '';
+      }
+
+      op = o;
+      highlightOp(o);
+
+      // show expression in small text above
+      const symbols = { '/':'÷', '*':'×', '-':'−', '+':'+' };
+      expr.textContent = prev + ' ' + (symbols[o] || o);
+    }
+
+    // ── Core calculation logic ──
+    function calculate(a, b, operator) {
+      if (operator === '+') return a + b;
+      if (operator === '-') return a - b;
+      if (operator === '*') return a * b;
+      if (operator === '/') {
+        if (b === 0) return null; // division by zero → error
+        return a / b;
+      }
+      return b;
+    }
+
+    // ── Handle equals ──
+    function handleEq() {
+      if (!op || prev === '') return;
+
+      const a = parseFloat(prev);
+      const b = parseFloat(current === '' ? prev : current);
+      const symbols = { '/':'÷', '*':'×', '-':'−', '+':'+' };
+
+      // Show full expression above result
+      expr.textContent = prev + ' ' + (symbols[op] || op) + ' ' + (current === '' ? prev : current) + ' =';
+
+      const result = calculate(a, b, op);
+      if (result === null) { showError(); return; }
+
+      current    = fmt(result);
+      prev       = '';
+      op         = null;
+      justEvaled = true;
+
+      highlightOp(null);
+      update(current);
+    }
+
+    // ── AC: clear everything ──
+    function handleClear() {
+      current    = '0';
+      prev       = '';
+      op         = null;
+      justEvaled = false;
+      highlightOp(null);
+      update('0');
+      expr.textContent = '';
+    }
+
+    // ── +/− : toggle sign ──
+    function handleSign() {
+      if (!current || current === '0') return;
+      current = current.startsWith('-') ? current.slice(1) : '-' + current;
+      update(current);
+    }
+
+    // ── % : convert to percentage ──
+    function handlePct() {
+      const v = parseFloat(current);
+      if (isNaN(v)) return;
+      current = fmt(v / 100);
+      update(current);
+    }
+
+    // ── Show error state ──
+    function showError() {
+      update('Error', true);
+      expr.textContent = '';
+      op = null; prev = ''; current = '0';
+    }
+
+    // ── Event listener: button clicks (delegated to grid) ──
+    document.querySelector('.btn-grid').addEventListener('click', function(e) {
+      const btn = e.target.closest('.btn');
+      if (!btn) return;
+
+      const num    = btn.dataset.num;
+      const btnOp  = btn.dataset.op;
+      const action = btn.dataset.action;
+
+      if (num !== undefined)       handleNum(num);
+      else if (btnOp)              handleOp(btnOp);
+      else if (action === 'eq')    handleEq();
+      else if (action === 'clear') handleClear();
+      else if (action === 'sign')  handleSign();
+      else if (action === 'pct')   handlePct();
+    });
+
+    // ── Event listener: keyboard support ──
+    document.addEventListener('keydown', function(e) {
+      if ('0123456789.'.includes(e.key))          handleNum(e.key);
+      else if (['+', '-', '*', '/'].includes(e.key)) handleOp(e.key);
+      else if (e.key === 'Enter' || e.key === '=')   handleEq();
+      else if (e.key === 'Escape')                   handleClear();
+      else if (e.key === 'Backspace') {
+        // delete last digit
+        if (justEvaled) return;
+        current = current.length > 1 ? current.slice(0, -1) : '0';
+        update(current);
+      }
+    });
+  </script>
+
+</body>
+</html>
